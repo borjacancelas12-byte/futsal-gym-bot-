@@ -70,12 +70,13 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # -------------------------------
 # SCHEDULER PARA RECORDATORIOS
 # -------------------------------
-scheduler = AsyncIOScheduler()
-
-async def recordatorio_diario(context: ContextTypes.DEFAULT_TYPE):
-    chat_id = os.getenv("CHAT_ID")  # Define tu chat_id de Telegram
-    await context.bot.send_message(chat_id=chat_id, text="¡Hora de entrenar! ⚽️")
-
+scheduler.add_job(
+    recordatorio_diario,
+    "cron",
+    hour=18,
+    minute=0,
+    kwargs={"context": "valor_que_necesites"}
+)
 scheduler.add_job(recordatorio_diario, "cron", hour=18, minute=0)  # Todos los días a las 18:00
 scheduler.start()
 
