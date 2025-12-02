@@ -1,19 +1,58 @@
 # main.py
 import os
-from fastapi import FastAPI, Request
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-import random
+import logging
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# ----------------------------
-# Configuración
-# ----------------------------
-TOKEN = os.getenv("Futsalgymbot")
-bot = Bot(token=TOKEN)
-app = FastAPI()
+# Configurar logging para ver errores y mensajes
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
-# Crear aplicación de Telegram
-application = ApplicationBuilder().token(TOKEN).build()
+# Token de tu bot (sin "_token" ni "el_")
+BOT_TOKEN = "Futsalgymbot"
+
+# Comando /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("¡Hola! Soy tu bot de FutsalGym. 😎")
+
+# Comando /help
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Comandos disponibles:\n"
+        "/start - iniciar bot\n"
+        "/help - ayuda"
+    )
+
+async def main():
+    # Crear la aplicación del bot
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    # Añadir handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
+
+    # Inicializar bot
+    await application.initialize()
+    await application.start()
+
+    # Configurar puerto dinámico de Render
+    PORT = int(os.environ.get("PORT", "8443"))
+    APP_NAME = os.environ.get("RENDER_APP_NAME", "<TU_APP>")
+    WEBHOOK_URL = f"https://{APP_NAME}.onrender.com/{BOT_TOKEN}"
+
+    # Configurar webhook
+    await application.bot.set_webhook(WEBHOOK_URL)
+    print(f"Bot funcionando en {WEBHOOK_URL} en el puerto {PORT}")
+
+    # Mantener el bot corriendo
+    await application.idle()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+
 
 # ----------------------------
 # Rutinas completas
