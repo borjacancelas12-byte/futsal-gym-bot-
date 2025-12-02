@@ -1,26 +1,52 @@
 # main.py
 import os
 from fastapi import FastAPI, Request
-from telegram import Update, Bot
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
+from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-TOKEN = os.environ.get("Futsalgymbot")  # tu token de Telegram sin _ ni _token
+# Tu token de Telegram
+TOKEN = os.environ.get("Futsalgymbot")  # IMPORTANTE: variable de entorno en Render
 
 bot = Bot(token=TOKEN)
 app = FastAPI()
 
-# Crear el dispatcher de Telegram
+# Dispatcher de telegram
 dispatcher = Dispatcher(bot, None, workers=0)
 
-# Handlers de ejemplo
+# --- Handlers ---
 def start(update: Update, context):
-    update.message.reply_text("¡Bot funcionando!")
+    keyboard = [
+        [InlineKeyboardButton("Opción 1", callback_data="opt1")],
+        [InlineKeyboardButton("Opción 2", callback_data="opt2")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text("¡Bot funcionando! Elige una opción:", reply_markup=reply_markup)
 
+def echo(update: Update, context):
+    update.message.reply_text(f"Has dicho: {update.message.text}")
+
+def button_callback(update: Update, context):
+    query = update.callback_query
+    query.answer()
+    query.edit_message_text(text=f"Has pulsado: {query.data}")
+
+# Añadimos handlers al dispatcher
 dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+dispatcher.add_handler(CallbackQueryHandler(button_callback))
 
-# Webhook endpoint para Telegram
+# --- Webhook para Telegram ---
 @app.post(f"/webhook/{TOKEN}")
-async def telegram_we_
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    update = Update.de_json(data, bot)
+    dispatcher.process_update(update)
+    return {"ok": True}
+
+# --- Ruta de prueba ---
+@app.get("/")
+async def root():
+    return {"status": "Bot online"}
 
 # ----------------------------
 # Rutinas completas
