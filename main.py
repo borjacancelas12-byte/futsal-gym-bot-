@@ -76,4 +76,57 @@ def nivel_ejercicio(update: Update, context):
     _, categoria, nivel = query.data.split("_")
     info = ejercicios[categoria][nivel]
     text = f"*{categoria} - {nivel}*\n{info['desc']}\nVideo: {info['video']}"
-    query.edit_message_
+    query.edit_message_text(text=text, parse_mode="Markdown")
+
+def posiciones_callback(update: Update, context):
+    query = update.callback_query
+    text = "*Posiciones en Futsal:*\n\n"
+    for pos, desc in posiciones.items():
+        text += f"*{pos}*: {desc}\n\n"
+    query.edit_message_text(text=text, parse_mode="Markdown")
+
+def talladas_callback(update: Update, context):
+    query = update.callback_query
+    text = "*Técnicas de Talladas:*\n\n"
+    for t, desc in talladas.items():
+        text += f"*{t}*: {desc}\n\n"
+    query.edit_message_text(text=text, parse_mode="Markdown")
+
+def echo(update: Update, context):
+    update.message.reply_text(f"Has dicho: {update.message.text}\nUsa /start para ver opciones.")
+
+# --- Scheduler para rutinas diarias ---
+def rutina_diaria():
+    for chat_id in registered_chats:
+        bot.send_message(chat_id, "📅 ¡Es hora de tu rutina diaria de FutsalGym! Usa /start para ver opciones.")
+
+registered_chats = set()
+
+def register_chat(update: Update, context):
+    registered_chats.add(update.message.chat_id)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(rutina_diaria, "cron", hour=10)  # Todos los días a las 10am
+scheduler.start()
+
+# --- Handlers ---
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("registrar", register_chat))
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+dispatcher.add_handler(CallbackQueryHandler(menu_ejercicios, pattern="menu_ejercicios"))
+dispatcher.add_handler(CallbackQueryHandler(posiciones_callback, pattern="posiciones"))
+dispatcher.add_handler(CallbackQueryHandler(talladas_callback, pattern="talladas"))
+dispatcher.add_handler(CallbackQueryHandler(categoria_ejercicio, pattern="ej_"))
+dispatcher.add_handler(CallbackQueryHandler(nivel_ejercicio, pattern="nivel_"))
+
+# --- Webhook ---
+@app.post(f"/webhook/{TOKEN}")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    update = Update.de_json(data, bot)
+    dispatcher.process_update(update)
+    return {"ok": True}
+
+@app.get("/")
+async def root():
+    return {"status": "Bot online"}
