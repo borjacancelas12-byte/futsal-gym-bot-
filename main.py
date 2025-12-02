@@ -9,10 +9,10 @@ logging.basicConfig(
 )
 
 # Token del bot
-TOKEN = os.environ.get("BOT_TOKEN")
+TOKEN = os.environ.get("Futsalgymbot")
 if not TOKEN:
-    logging.error("No se encontró la variable de entorno BOT_TOKEN")
-    raise ValueError("No se encontró la variable de entorno BOT_TOKEN")
+    logging.error("No se encontró la variable de entorno Futsalgymbot")
+    raise ValueError("No se encontró la variable de entorno Futsalgymbot")
 
 # Crear la aplicación de Telegram
 telegram_app = create_application(TOKEN)
