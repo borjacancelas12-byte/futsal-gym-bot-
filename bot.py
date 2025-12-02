@@ -1,16 +1,13 @@
-# bot.py
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
 
-# Función para crear la aplicación del bot
 def create_application(token: str):
-    application = ApplicationBuilder().token(token).build()
+    app = ApplicationBuilder().token(token).build()
 
-    # Ejemplo de comando /start
+    # Comando de ejemplo
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("¡Hola! Soy tu bot.")
+        await update.message.reply_text("Hola! Bot funcionando correctamente.")
 
-    # Añadimos el comando a la aplicación
-    application.add_handler(CommandHandler("start", start))
-
-    return application
+    app.add_handler(CommandHandler("start", start))
+    return app
