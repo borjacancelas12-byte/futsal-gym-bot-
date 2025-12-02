@@ -13,9 +13,7 @@ TOKEN = os.environ.get("Futsalgymbot")
 bot = Bot(token=TOKEN)
 app = FastAPI()
 dispatcher = Dispatcher(bot, None, workers=0)
- rutinas = {
-    # Aquí pones todas las rutinas como te pasé antes
-}rutinas = {
+rutinas = {
     "Básico": {
         "Fuerza": {
             "Tren Superior": [
