@@ -1,45 +1,26 @@
+# main.py
+import os
 from fastapi import FastAPI, Request
 from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Dispatcher, MessageHandler, filters
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
 
-import os
+TOKEN = os.environ.get("Futsalgymbot")  # tu token de Telegram sin _ ni _token
 
-# Tu token del bot (pon tu token real aquí)
-TOKEN = "Futsalgymbot"
-
-# Crea el bot
 bot = Bot(token=TOKEN)
-
-# Crea la aplicación de telegram
-application = ApplicationBuilder().token(TOKEN).build()
-
-# FastAPI app
 app = FastAPI()
 
-# Handler de start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("¡Hola! Soy tu bot listo para usar 🚀")
+# Crear el dispatcher de Telegram
+dispatcher = Dispatcher(bot, None, workers=0)
 
-# Agrega el handler al bot
-application.add_handler(CommandHandler("start", start))
+# Handlers de ejemplo
+def start(update: Update, context):
+    update.message.reply_text("¡Bot funcionando!")
 
-# Ruta para webhooks
+dispatcher.add_handler(CommandHandler("start", start))
+
+# Webhook endpoint para Telegram
 @app.post(f"/webhook/{TOKEN}")
-async def webhook(req: Request):
-    data = await req.json()
-    update = Update.de_json(data, bot)
-    await application.update_queue.put(update)
-    return {"status": "ok"}
-
-# Ruta de prueba
-@app.get("/")
-async def root():
-    return {"message": "Bot corriendo ✅"}
-
-# Para Render, asegúrate de usar uvicorn en el CMD:
-# uvicorn main:app --host 0.0.0.0 --port $PORT
-
-
+async def telegram_we_
 
 # ----------------------------
 # Rutinas completas
