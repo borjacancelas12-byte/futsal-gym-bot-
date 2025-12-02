@@ -2,9 +2,12 @@
 import os
 from fastapi import FastAPI, Request
 from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 import random
 
+# ----------------------------
+# Configuración
+# ----------------------------
 TOKEN = os.getenv("Futsalgymbot_token")
 bot = Bot(token=TOKEN)
 app = FastAPI()
@@ -12,76 +15,96 @@ app = FastAPI()
 # Crear aplicación de Telegram
 application = ApplicationBuilder().token(TOKEN).build()
 
-# Rutinas de ejemplo
+# ----------------------------
+# Rutinas completas
+# ----------------------------
 rutinas = {
-    "portero": [
-        {
-            "ejercicio": "Reacción y reflejos",
-            "youtube": "https://www.youtube.com/watch?v=Y1a4L6V1ZyY"
-        },
-        {
-            "ejercicio": "Desplazamientos laterales",
-            "youtube": "https://www.youtube.com/watch?v=2g8S56Oa0jk"
-        },
-    ],
-    "ala": [
-        {
-            "ejercicio": "Regate y control de balón",
-            "youtube": "https://www.youtube.com/watch?v=4rL7QsxY8aU"
-        },
-        {
-            "ejercicio": "Pases y cambios de ritmo",
-            "youtube": "https://www.youtube.com/watch?v=3dH3FZsE5hQ"
-        },
-    ],
-    "pívot": [
-        {
-            "ejercicio": "Finalización y remates",
-            "youtube": "https://www.youtube.com/watch?v=kFv2p5KytzM"
-        },
-        {
-            "ejercicio": "Protección de balón",
-            "youtube": "https://www.youtube.com/watch?v=9m3HfZ5vO9c"
-        },
-    ],
-    "cierre": [
-        {
-            "ejercicio": "Defensa y anticipación",
-            "youtube": "https://www.youtube.com/watch?v=Jk6w9F0iHhE"
-        },
-        {
-            "ejercicio": "Marcaje y presión",
-            "youtube": "https://www.youtube.com/watch?v=Hb9Fz7kKkJo"
-        },
-    ],
+    "portero": {
+        "futbol": [
+            {"ejercicio": "Reacción y reflejos", "youtube": "https://www.youtube.com/watch?v=Y1a4L6V1ZyY"},
+            {"ejercicio": "Desplazamientos laterales", "youtube": "https://www.youtube.com/watch?v=2g8S56Oa0jk"},
+            {"ejercicio": "Bloqueos y salidas", "youtube": "https://www.youtube.com/watch?v=8bLJk7R5L0A"}
+        ],
+        "gym": [
+            {"ejercicio": "Sentadillas con salto", "youtube": "https://www.youtube.com/watch?v=U3HlEF_E9fo"},
+            {"ejercicio": "Plancha lateral", "youtube": "https://www.youtube.com/watch?v=K2VljzCC16g"},
+            {"ejercicio": "Flexiones", "youtube": "https://www.youtube.com/watch?v=IODxDxX7oi4"}
+        ]
+    },
+    "ala": {
+        "futbol": [
+            {"ejercicio": "Regate y control de balón", "youtube": "https://www.youtube.com/watch?v=4rL7QsxY8aU"},
+            {"ejercicio": "Pases y cambios de ritmo", "youtube": "https://www.youtube.com/watch?v=3dH3FZsE5hQ"},
+            {"ejercicio": "Finalización rápida", "youtube": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+        ],
+        "gym": [
+            {"ejercicio": "Burpees", "youtube": "https://www.youtube.com/watch?v=TU8QYVW0gDU"},
+            {"ejercicio": "Zancadas", "youtube": "https://www.youtube.com/watch?v=QOVaHwm-Q6U"},
+            {"ejercicio": "Escaladores", "youtube": "https://www.youtube.com/watch?v=nmwgirgXLYM"}
+        ]
+    },
+    "pívot": {
+        "futbol": [
+            {"ejercicio": "Protección de balón", "youtube": "https://www.youtube.com/watch?v=9m3HfZ5vO9c"},
+            {"ejercicio": "Remates de pivote", "youtube": "https://www.youtube.com/watch?v=kFv2p5KytzM"},
+            {"ejercicio": "Movimientos de desmarque", "youtube": "https://www.youtube.com/watch?v=8hP9D6kZseM"}
+        ],
+        "gym": [
+            {"ejercicio": "Peso muerto con mancuernas", "youtube": "https://www.youtube.com/watch?v=ytGaGIn3SjE"},
+            {"ejercicio": "Press de hombros", "youtube": "https://www.youtube.com/watch?v=B-aVuyhvLHU"},
+            {"ejercicio": "Abdominales", "youtube": "https://www.youtube.com/watch?v=1fbU_MkV7NE"}
+        ]
+    },
+    "cierre": {
+        "futbol": [
+            {"ejercicio": "Marcaje y presión", "youtube": "https://www.youtube.com/watch?v=Hb9Fz7kKkJo"},
+            {"ejercicio": "Anticipación de pases", "youtube": "https://www.youtube.com/watch?v=QzB5HIX-KYI"},
+            {"ejercicio": "Despejes y coberturas", "youtube": "https://www.youtube.com/watch?v=a3M0Gn1kb1U"}
+        ],
+        "gym": [
+            {"ejercicio": "Sentadillas", "youtube": "https://www.youtube.com/watch?v=aclHkVaku9U"},
+            {"ejercicio": "Peso muerto rumano", "youtube": "https://www.youtube.com/watch?v=2SHsk9AzdjA"},
+            {"ejercicio": "Plancha frontal", "youtube": "https://www.youtube.com/watch?v=pSHjTRCQxIw"}
+        ]
+    }
 }
 
-# Handler /start
+# ----------------------------
+# Handlers
+# ----------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "¡Hola! Soy Futsalgymbot 🤖⚽\n"
-        "Dime tu posición (portero, ala, pívot, cierre) y te daré la rutina de hoy."
+        "Dime tu posición (portero, ala, pívot, cierre) y te daré la rutina completa de hoy (fútbol + gym)."
     )
 
-# Handler de mensajes de texto
 async def rutina(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message.text.lower()
-    if msg in rutinas:
-        rutina = random.choice(rutinas[msg])
-        await update.message.reply_text(
-            f"💪 Ejercicio: {rutina['ejercicio']}\n"
-            f"🎥 Video de ejemplo: {rutina['youtube']}"
-        )
+    pos = update.message.text.lower()
+    if pos in rutinas:
+        msg = f"💪 Rutina diaria para *{pos.capitalize()}*:\n\n"
+        # Ejercicios de fútbol
+        msg += "⚽ *Ejercicios de Fútbol:*\n"
+        for e in rutinas[pos]["futbol"]:
+            msg += f"- {e['ejercicio']} 🎥 [Video]({e['youtube']})\n"
+        # Ejercicios de gym
+        msg += "\n🏋️‍♂️ *Ejercicios de Gym:*\n"
+        for e in rutinas[pos]["gym"]:
+            msg += f"- {e['ejercicio']} 🎥 [Video]({e['youtube']})\n"
+        await update.message.reply_markdown(msg)
     else:
         await update.message.reply_text(
-            "No reconozco esa posición. Por favor escribe: portero, ala, pívot o cierre."
+            "No reconozco esa posición. Escribe: portero, ala, pívot o cierre."
         )
 
-# Agregar handlers
+# ----------------------------
+# Agregar handlers a la app
+# ----------------------------
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, rutina))
 
-# Endpoint de webhook
+# ----------------------------
+# Endpoint para webhook
+# ----------------------------
 @app.post("/webhook/{token}")
 async def webhook(token: str, request: Request):
     if token != TOKEN:
@@ -91,8 +114,11 @@ async def webhook(token: str, request: Request):
     await application.process_update(update)
     return {"ok": True}
 
-# Endpoint para probar que el servidor está online
+# ----------------------------
+# Endpoint para test
+# ----------------------------
 @app.get("/")
 def root():
     return {"status": "Futsalgymbot online!"}
+
 
