@@ -1,9 +1,0 @@
-@app.post("/webhook/{token}")
-async def webhook(token: str, request: Request):
-    if token != BOT_TOKEN:
-        return {"status": "invalid token"}
-    data = await request.json()
-    print("Llega un mensaje:", data)  # 👈 Esto mostrará todo el mensaje en los logs
-    update = Update.de_json(data, bot)
-    dp.process_update(update)
-    return {"status": "ok"}
