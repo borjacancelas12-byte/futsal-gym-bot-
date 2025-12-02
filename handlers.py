@@ -4,7 +4,7 @@ from telegram.ext import Dispatcher, CommandHandler
 
 import os
 
-BOT_TOKEN = os.getenv("Futsalgymbot_token")  # tu token exacto
+BOT_TOKEN = os.getenv("Futsalgymbot")  # tu token exacto
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, None, workers=0, use_context=True)
 
