@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI, Request
 from bot import create_application
 
-TOKEN = os.getenv(8238788823:AAH2Ou1r-QRt-PbofYume0MXCODMrU_MRTE)
+TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "missecret")
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 
