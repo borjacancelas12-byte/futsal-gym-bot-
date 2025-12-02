@@ -1,20 +1,110 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from apscheduler.schedulers.background import BackgroundScheduler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+)
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from fastapi import FastAPI
 
-# Cargar variables de entorno
+# -------------------------------
+# CARGA DE VARIABLES DE ENTORNO
+# -------------------------------
 load_dotenv()
 TOKEN = os.getenv("Futsalgymbot")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Inicializar FastAPI
+# -------------------------------
+# INICIALIZACIÓN DE FASTAPI
+# -------------------------------
 app = FastAPI()
 
-# Inicializar bot con ApplicationBuilder
+@app.get("/")
+async def root():
+    return {"message": "Bot activo"}
+
+# -------------------------------
+# FUNCIONES DEL BOT
+# -------------------------------
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "¡Hola! Soy tu bot de futsal. Usa /rutinas para ver tus entrenamientos o /ayuda para más información."
+    )
+
+async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Comandos disponibles:\n"
+        "/start - Iniciar el bot\n"
+        "/rutinas - Ver rutinas disponibles\n"
+        "/ayuda - Ver esta ayuda"
+    )
+
+async def rutinas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Rutina 1", callback_data="rutina_1")],
+        [InlineKeyboardButton("Rutina 2", callback_data="rutina_2")],
+        [InlineKeyboardButton("Volver", callback_data="menu_principal")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Selecciona una rutina:", reply_markup=reply_markup)
+
+# Callback para botones
+async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == "rutina_1":
+        await query.edit_message_text("Aquí está la información de la Rutina 1 🏃‍♂️")
+    elif query.data == "rutina_2":
+        await query.edit_message_text("Aquí está la información de la Rutina 2 🏋️‍♂️")
+    elif query.data == "menu_principal":
+        keyboard = [
+            [InlineKeyboardButton("Rutina 1", callback_data="rutina_1")],
+            [InlineKeyboardButton("Rutina 2", callback_data="rutina_2")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Selecciona una rutina:", reply_markup=reply_markup)
+
+# -------------------------------
+# SCHEDULER PARA RECORDATORIOS
+# -------------------------------
+scheduler = AsyncIOScheduler()
+
+async def recordatorio_diario(context: ContextTypes.DEFAULT_TYPE):
+    chat_id = os.getenv("CHAT_ID")  # Define tu chat_id de Telegram
+    await context.bot.send_message(chat_id=chat_id, text="¡Hora de entrenar! ⚽️")
+
+scheduler.add_job(recordatorio_diario, "cron", hour=18, minute=0)  # Todos los días a las 18:00
+scheduler.start()
+
+# -------------------------------
+# INICIALIZACIÓN DEL BOT
+# -------------------------------
 application = ApplicationBuilder().token(TOKEN).build()
+
+# Handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("rutinas", rutinas))
+application.add_handler(CommandHandler("ayuda", ayuda))
+application.add_handler(CallbackQueryHandler(callback_handler))
+
+# -------------------------------
+# EJECUCIÓN
+# -------------------------------
+if __name__ == "__main__":
+    import asyncio
+    from telegram.ext import Application
+
+    async def main():
+        await application.initialize()
+        await application.start()
+        await application.updater.start_polling()  # Para desarrollo local
+        await application.idle()
+
+    asyncio.run(main())
+
 
 # --- Comandos del bot ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
