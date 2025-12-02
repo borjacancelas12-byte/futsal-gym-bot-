@@ -1,13 +1,27 @@
-from rutinas import get_rutina
+from fastapi import FastAPI, Request
+from telegram import Update, Bot
+from telegram.ext import Dispatcher, CommandHandler
 
-async def start_command(update, context):
-    await update.message.reply_text(
-        "Hola! ¿Qué quieres hoy?\n"
-        "- /hoy para obtener una rutina según tu posición ⚽💪"
-    )
+import os
 
-async def hoy_command(update, context):
-    await update.message.reply_text("¿Cuál es tu posición?\n"
-                                    "pivot / cierre / ala / portero")
+BOT_TOKEN = os.getenv("Futsalgymbot_token")  # tu token exacto
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot, None, workers=0, use_context=True)
 
-    return
+app = FastAPI()
+
+# Define un comando /start
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="¡Hola! Soy Futsalgymbot 🤖")
+
+dp.add_handler(CommandHandler("start", start))
+
+@app.post("/webhook/{token}")
+async def webhook(token: str, request: Request):
+    if token != BOT_TOKEN:
+        return {"status": "invalid token"}
+    data = await request.json()
+    update = Update.de_json(data, bot)
+    dp.process_update(update)
+    return {"status": "ok"}
