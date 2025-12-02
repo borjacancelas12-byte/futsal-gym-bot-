@@ -1,16 +1,15 @@
-# main.py
 import os
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# Configurar logging para ver errores y mensajes
+# Logging para ver errores y mensajes
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
-# Token de tu bot (sin "_token" ni "el_")
+# Token del bot
 BOT_TOKEN = "Futsalgymbot"
 
 # Comando /start
@@ -27,15 +26,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def main():
     # Crear la aplicación del bot
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Añadir handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
 
     # Inicializar bot
-    await application.initialize()
-    await application.start()
+    await app.initialize()
+    await app.start()
 
     # Configurar puerto dinámico de Render
     PORT = int(os.environ.get("PORT", "8443"))
@@ -43,11 +42,11 @@ async def main():
     WEBHOOK_URL = f"https://{APP_NAME}.onrender.com/{BOT_TOKEN}"
 
     # Configurar webhook
-    await application.bot.set_webhook(WEBHOOK_URL)
+    await app.bot.set_webhook(WEBHOOK_URL)
     print(f"Bot funcionando en {WEBHOOK_URL} en el puerto {PORT}")
 
     # Mantener el bot corriendo
-    await application.idle()
+    await app.idle()
 
 if __name__ == "__main__":
     import asyncio
