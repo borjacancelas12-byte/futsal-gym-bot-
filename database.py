@@ -1,3 +1,4 @@
+# database.py
 import aiosqlite
 
 DB = "bot.db"
@@ -34,4 +35,5 @@ async def set_objetivo(user_id, objetivo):
 async def get_user(user_id):
     async with aiosqlite.connect(DB) as db:
         cursor = await db.execute("SELECT posicion, objetivo FROM usuarios WHERE user_id=?", (user_id,))
-        return await cursor.fetchone()
+        row = await cursor.fetchone()
+        return row  # (posicion, objetivo) or None
