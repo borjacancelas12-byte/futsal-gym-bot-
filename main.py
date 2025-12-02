@@ -8,7 +8,7 @@ import random
 # ----------------------------
 # Configuración
 # ----------------------------
-TOKEN = os.getenv("Futsalgymbot_token")
+TOKEN = os.getenv("Futsalgymbot")
 bot = Bot(token=TOKEN)
 app = FastAPI()
 
