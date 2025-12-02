@@ -1,56 +1,44 @@
+from fastapi import FastAPI, Request
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Dispatcher, MessageHandler, filters
+
 import os
-import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# Logging para ver errores y mensajes
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+# Tu token del bot (pon tu token real aquí)
+TOKEN = "Futsalgymbot"
 
-# Token del bot
-BOT_TOKEN = "Futsalgymbot"
+# Crea el bot
+bot = Bot(token=TOKEN)
 
-# Comando /start
+# Crea la aplicación de telegram
+application = ApplicationBuilder().token(TOKEN).build()
+
+# FastAPI app
+app = FastAPI()
+
+# Handler de start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("¡Hola! Soy tu bot de FutsalGym. 😎")
+    await update.message.reply_text("¡Hola! Soy tu bot listo para usar 🚀")
 
-# Comando /help
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Comandos disponibles:\n"
-        "/start - iniciar bot\n"
-        "/help - ayuda"
-    )
+# Agrega el handler al bot
+application.add_handler(CommandHandler("start", start))
 
-async def main():
-    # Crear la aplicación del bot
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+# Ruta para webhooks
+@app.post(f"/webhook/{TOKEN}")
+async def webhook(req: Request):
+    data = await req.json()
+    update = Update.de_json(data, bot)
+    await application.update_queue.put(update)
+    return {"status": "ok"}
 
-    # Añadir handlers
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
+# Ruta de prueba
+@app.get("/")
+async def root():
+    return {"message": "Bot corriendo ✅"}
 
-    # Inicializar bot
-    await app.initialize()
-    await app.start()
+# Para Render, asegúrate de usar uvicorn en el CMD:
+# uvicorn main:app --host 0.0.0.0 --port $PORT
 
-    # Configurar puerto dinámico de Render
-    PORT = int(os.environ.get("PORT", "8443"))
-    APP_NAME = os.environ.get("RENDER_APP_NAME", "<TU_APP>")
-    WEBHOOK_URL = f"https://{APP_NAME}.onrender.com/{BOT_TOKEN}"
-
-    # Configurar webhook
-    await app.bot.set_webhook(WEBHOOK_URL)
-    print(f"Bot funcionando en {WEBHOOK_URL} en el puerto {PORT}")
-
-    # Mantener el bot corriendo
-    await app.idle()
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
 
 
 # ----------------------------
