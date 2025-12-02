@@ -1,14 +1,11 @@
-# rutinas.py
-rutinas_por_posicion = {
-    "portero": "🔥 *Rutina de Portero*:\n- Saltos pliométricos 3x10\n- Pecho 4x12\n- Hombro 4x10\n- Abdomen 4x20\n- Trabajo de reflejos",
-    "cierre": "💪 *Rutina de Cierre*:\n- Pierna 4x10\n- Espalda 4x12\n- Core 4x20\n- Zancadas 3x12\n- Trabajo de agilidad",
-    "ala": "⚡ *Rutina de Ala*:\n- HIIT 15 min\n- Pierna 3x12\n- Pecho 4x12\n- Core 4x20\n- Trabajo de velocidad",
-    "pivote": "🦵 *Rutina de Pivote*:\n- Pierna pesada 5x8\n- Glúteo 4x15\n- Espalda 4x10\n- Trabajo de giro y fuerza"
-}
+def get_rutina(posicion):
+    posicion = posicion.lower()
 
-rutinas_por_objetivo = {
-    "fuerza": "🏋️‍♂️ *Objetivo Fuerza*:\n- Sentadilla 5x5\n- Peso muerto 5x5\n- Press banca 5x5",
-    "cardio": "🏃 *Objetivo Cardio*:\n- Cinta 30 min\n- Cuestas 10x\n- HIIT 20 min",
-    "pretemporada": "🔥 *Pretemporada*:\n- Circuitos intensos\n- Técnica\n- Resistencia",
-    "explosividad": "⚡ *Explosividad*:\n- Sprints 10x20m\n- Saltos\n- Trabajo reactivo"
-}
+    rutinas = {
+        "pivot": "Rutina Pivot:\n- Sentadillas 4x10\n- Press banca 4x8\n- Sprints 10x20m",
+        "cierre": "Rutina Cierre:\n- Peso muerto 4x6\n- Core 4x15\n- Resistencia 20 min",
+        "ala": "Rutina Ala:\n- Saltos pliométricos\n- Sprints laterales\n- Dominadas",
+        "portero": "Rutina Portero:\n- Reflejos\n- Saltos\n- Fuerza de tren superior"
+    }
+
+    return rutinas.get(posicion, "Esa posición no existe 😅")
