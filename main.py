@@ -10,15 +10,21 @@ telegram_app = create_application(TOKEN)
 
 app = FastAPI()
 
+# Usamos la variable de Render para obtener el dominio automáticamente
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+if not RENDER_EXTERNAL_URL:
+    raise ValueError("No se encontró la variable de entorno RENDER_EXTERNAL_URL")
+
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
-WEBHOOK_URL = f"https://<TU_DOMINIO_RENDOR>.onrender.com{WEBHOOK_PATH}"  # Cambia con tu dominio
+WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
 # Configura webhook al iniciar FastAPI
 @app.on_event("startup")
 async def on_startup():
     await telegram_app.bot.set_webhook(WEBHOOK_URL)
+    print(f"Webhook configurado en: {WEBHOOK_URL}")
 
-# Endpoint para recibir updates
+# Endpoint para recibir updates de Telegram
 @app.post(WEBHOOK_PATH)
 async def webhook(request: Request):
     update = await request.json()
