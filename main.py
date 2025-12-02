@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext, MessageHandler, filters
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # Cargar variables de entorno
@@ -13,9 +13,48 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 # Inicializar FastAPI
 app = FastAPI()
 
-# Inicializar bot
-bot = Bot(token=TOKEN)
+# Inicializar bot con ApplicationBuilder
 application = ApplicationBuilder().token(TOKEN).build()
+
+# --- Comandos del bot ---
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("¡Hola! Soy tu bot de futsal y gym 🏋️⚽")
+
+async def rutinas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Aquí tienes tus rutinas de entrenamiento:\n"
+        "1. Calentamiento\n2. Fútbol en cancha\n3. Ejercicios de fuerza\n4. Estiramientos"
+    )
+
+async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Comandos disponibles:\n"
+        "/start - Saludo inicial\n"
+        "/rutinas - Mostrar rutinas\n"
+        "/ayuda - Mostrar ayuda"
+    )
+
+# Registrar comandos
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("rutinas", rutinas))
+application.add_handler(CommandHandler("ayuda", ayuda))
+
+# --- Recordatorios / Scheduler ---
+scheduler = BackgroundScheduler()
+def recordatorio():
+    chat_id = os.getenv("ADMIN_CHAT_ID")
+    if chat_id:
+        # Enviar mensaje usando application.bot
+        application.bot.send_message(chat_id=int(chat_id), text="Recordatorio diario: ¡Entrena hoy! 💪⚽")
+scheduler.add_job(recordatorio, 'interval', hours=24)
+scheduler.start()
+
+# --- Webhook endpoint para FastAPI ---
+@app.post("/webhook")
+async def telegram_webhook(req: Request):
+    data = await req.json()
+    update
+
 
 # --- Comandos del bot ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
