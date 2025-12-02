@@ -1,14 +1,135 @@
 import os
-from fastapi import FastAPI, Request
-from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Dispatcher, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from dotenv import load_dotenv
+
+load_dotenv()
+TOKEN = os.getenv("FUTSALGYMBOT")
+
+app = ApplicationBuilder().token(TOKEN).build()
+
 
 TOKEN = os.environ.get("Futsalgymbot")
 bot = Bot(token=TOKEN)
 app = FastAPI()
 dispatcher = Dispatcher(bot, None, workers=0)
+ rutinas = {
+    # Aquí pones todas las rutinas como te pasé antes
+}rutinas = {
+    "Básico": {
+        "Fuerza": {
+            "Tren Superior": [
+                {"ejercicio": "Flexiones de brazos", "series": "3x12", "video": "https://www.youtube.com/watch?v=_l3ySVKYVJ8"},
+                {"ejercicio": "Remo con mancuerna", "series": "3x10", "video": "https://www.youtube.com/watch?v=kBWAon7ItDw"}
+            ],
+            "Tren Inferior": [
+                {"ejercicio": "Sentadillas sin peso", "series": "3x15", "video": "https://www.youtube.com/watch?v=aclHkVaku9U"},
+                {"ejercicio": "Zancadas", "series": "3x12", "video": "https://www.youtube.com/watch?v=QOVaHwm-Q6U"}
+            ],
+            "Core": [
+                {"ejercicio": "Plancha frontal", "series": "3x30s", "video": "https://www.youtube.com/watch?v=pSHjTRCQxIw"},
+                {"ejercicio": "Plancha lateral", "series": "3x30s por lado", "video": "https://www.youtube.com/watch?v=Kq4Gcx7s7Tw"}
+            ]
+        },
+        "Cardio": [
+            {"ejercicio": "Sprints cortos", "series": "5x20m", "video": "https://www.youtube.com/watch?v=Z3ZLJf1ZwSk"},
+            {"ejercicio": "Cambio de dirección", "series": "5x10 rep", "video": "https://www.youtube.com/watch?v=FjRmzuNkg4c"}
+        ],
+        "Técnica": [
+            {"ejercicio": "Pases cortos", "series": "10 min", "video": "https://www.youtube.com/watch?v=Q4D7zBQm0VI"},
+            {"ejercicio": "Control de balón", "series": "10 min", "video": "https://www.youtube.com/watch?v=JYnb5xHtz-8"}
+        ]
+    },
+    "Intermedio": {
+        "Fuerza": {
+            "Tren Superior": [
+                {"ejercicio": "Flexiones con palmada", "series": "4x12", "video": "https://www.youtube.com/watch?v=IODxDxX7oi4"},
+                {"ejercicio": "Press de hombros con mancuernas", "series": "4x10", "video": "https://www.youtube.com/watch?v=B-aVuyhvLHU"}
+            ],
+            "Tren Inferior": [
+                {"ejercicio": "Sentadillas con mancuernas", "series": "4x12", "video": "https://www.youtube.com/watch?v=SW_C1A-rejs"},
+                {"ejercicio": "Peso muerto ligero", "series": "3x10", "video": "https://www.youtube.com/watch?v=r4MzxtBKyNE"}
+            ],
+            "Core": [
+                {"ejercicio": "Crunches", "series": "4x15", "video": "https://www.youtube.com/watch?v=wkD8rjkodUI"},
+                {"ejercicio": "Giros rusos", "series": "3x20", "video": "https://www.youtube.com/watch?v=wkD8rjkodUI"}
+            ]
+        },
+        "Cardio": [
+            {"ejercicio": "Circuitos HIIT", "series": "15 min", "video": "https://www.youtube.com/watch?v=ml6cT4AZdqI"},
+            {"ejercicio": "Sprints con resistencia", "series": "6x30m", "video": "https://www.youtube.com/watch?v=8Q2sHjxtd8A"}
+        ],
+        "Técnica": [
+            {"ejercicio": "Regates rápidos", "series": "15 min", "video": "https://www.youtube.com/watch?v=CxZmvXzGJ7o"},
+            {"ejercicio": "Pases largos", "series": "10 min", "video": "https://www.youtube.com/watch?v=CxZmvXzGJ7o"}
+        ]
+    },
+    "Avanzado": {
+        # Rutina avanzada similar pero con más intensidad, más repeticiones y combinaciones
+    }
+}
+def menu_rutinas(update: Update, context):
+    query = update.callback_query
+    keyboard = [
+        [InlineKeyboardButton("Básico", callback_data="rutina_Básico")],
+        [InlineKeyboardButton("Intermedio", callback_data="rutina_Intermedio")],
+        [InlineKeyboardButton("Avanzado", callback_data="rutina_Avanzado")]
+    ]
+    query.edit_message_text("Elige tu nivel para ver la rutina semanal:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+def mostrar_rutina(update: Update, context):
+    query = update.callback_query
+    nivel = query.data.split("_")[1]
+    texto = f"*Rutina de {nivel}*\n\n"
+    for categoria, grupos in rutinas[nivel].items():
+        texto += f"*{categoria}*\n"
+        if isinstance(grupos, dict):  # Fuerza
+            for grupo, ejercicios_list in grupos.items():
+                texto += f"_{grupo}_\n"
+                for e in ejercicios_list:
+                    texto += f"- {e['ejercicio']} ({e['series']}) [Video]({e['video']})\n"
+        else:  # Cardio / Técnica
+            for e in grupos:
+                texto += f"- {e['ejercicio']} ({e['series']}) [Video]({e['video']})\n"
+        texto += "\n"
+    query.edit_message_text(texto, parse_mode="Markdown")
+
+dispatcher.add_handler(CallbackQueryHandler(menu_rutinas, pattern="menu_rutinas"))
+dispatcher.add_handler(CallbackQueryHandler(mostrar_rutina, pattern="rutina_"))
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [[InlineKeyboardButton("Ver Rutinas", callback_data="menu_rutinas")]]
+    await update.message.reply_text("¡Bienvenido a FutsalGymBot!", reply_markup=InlineKeyboardMarkup(keyboard))
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [[InlineKeyboardButton("Ver Rutinas", callback_data="menu_rutinas")]]
+    await update.message.reply_text("¡Bienvenido a FutsalGymBot!", reply_markup=InlineKeyboardMarkup(keyboard))
+async def menu_rutinas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    keyboard = [
+        [InlineKeyboardButton("Básico", callback_data="rutina_Básico")],
+        [InlineKeyboardButton("Intermedio", callback_data="rutina_Intermedio")],
+        [InlineKeyboardButton("Avanzado", callback_data="rutina_Avanzado")]
+    ]
+    await query.edit_message_text("Elige tu nivel para ver la rutina semanal:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+async def mostrar_rutina(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    nivel = query.data.split("_")[1]
+    texto = f"*Rutina de {nivel}*\n\n"
+    for categoria, grupos in rutinas[nivel].items():
+        texto += f"*{categoria}*\n"
+        if isinstance(grupos, dict):
+            for grupo, ejercicios_list in grupos.items():
+                texto += f"_{grupo}_\n"
+                for e in ejercicios_list:
+                    texto += f"- {e['ejercicio']} ({e['series']}) [Video]({e['video']})\n"
+        else:
+            for e in grupos:
+                texto += f"- {e['ejercicio']} ({e['series']}) [Video]({e['video']})\n"
+        texto += "\n"
+    await query.edit_message_text(texto, parse_mode="Markdown")
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(menu_rutinas, pattern="menu_rutinas"))
+app.add_handler(CallbackQueryHandler(mostrar_rutina, pattern="rutina_"))
 
 # --- Datos ---
 ejercicios = {
