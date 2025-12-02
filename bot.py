@@ -3,8 +3,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Leer token y allowed id desde variables de entorno
-TOKEN = os.getenv("TOKEN")
-if not TOKEN:
+TOKEN = os.getenv("8238788823:AAH2Ou1r-QRt-PbofYume0MXCODMrU_MRTE")
+if not TOKEN:8238788823:AAH2Ou1r-QRt-PbofYume0MXCODMrU_MRTE
     raise RuntimeError("La variable de entorno TOKEN no está definida. Usa .env para desarrollo o configura la variable en tu host.")
 
 # Permite cambiar el ALLOWED_ID por variable de entorno (si no, usa el valor que pusiste)
