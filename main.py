@@ -1,18 +1,74 @@
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext, MessageHandler, filters
+from apscheduler.schedulers.background import BackgroundScheduler
 
+# Cargar variables de entorno
 load_dotenv()
-TOKEN = os.getenv("FUTSALGYMBOT")
+TOKEN = os.getenv("Futsalgymbot")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-app = ApplicationBuilder().token(TOKEN).build()
-
-
-TOKEN = os.environ.get("Futsalgymbot")
-bot = Bot(token=TOKEN)
+# Inicializar FastAPI
 app = FastAPI()
-dispatcher = Dispatcher(bot, None, workers=0)
+
+# Inicializar bot
+bot = Bot(token=TOKEN)
+application = ApplicationBuilder().token(TOKEN).build()
+
+# --- Comandos del bot ---
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("¡Hola! Soy tu bot de futsal y gym 🏋️⚽")
+
+async def rutinas(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Aquí tienes tus rutinas de entrenamiento:\n"
+        "1. Calentamiento\n2. Fútbol en cancha\n3. Ejercicios de fuerza\n4. Estiramientos"
+    )
+
+async def ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Comandos disponibles:\n"
+        "/start - Saludo inicial\n"
+        "/rutinas - Mostrar rutinas\n"
+        "/ayuda - Mostrar ayuda"
+    )
+
+# Registrar comandos
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("rutinas", rutinas))
+application.add_handler(CommandHandler("ayuda", ayuda))
+
+# --- Recordatorios / Scheduler ---
+scheduler = BackgroundScheduler()
+def recordatorio():
+    # Este mensaje se enviará automáticamente a un chat
+    chat_id = os.getenv("ADMIN_CHAT_ID", None)
+    if chat_id:
+        bot.send_message(chat_id=chat_id, text="Recordatorio diario: ¡Entrena hoy! 💪⚽")
+scheduler.add_job(recordatorio, 'interval', hours=24)
+scheduler.start()
+
+# --- Webhook endpoint para FastAPI ---
+@app.post("/webhook")
+async def telegram_webhook(req: Request):
+    data = await req.json()
+    update = Update.de_json(data, bot)
+    await application.process_update(update)
+    return {"ok": True}
+
+# --- Comando para comprobar que el bot funciona ---
+@app.get("/")
+async def root():
+    return {"status": "Bot online"}
+
+# --- Configurar webhook al arrancar la app ---
+@app.on_event("startup")
+async def on_startup():
+    await bot.delete_webhook()
+    await bot.set_webhook(url=WEBHOOK_URL)
+
 rutinas = {
     "Básico": {
         "Fuerza": {
